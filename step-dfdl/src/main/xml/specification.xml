@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<specification xmlns="http://docbook.org/ns/docbook"
+               xmlns:cs="http://www.w3.org/XML/XProc/2006/04/components#"
+               xmlns:e="http://www.w3.org/1999/XSL/Spec/ElementSyntax"
+               xmlns:p="http://www.w3.org/ns/xproc"
+               xmlns:xi="http://www.w3.org/2001/XInclude"
+               xmlns:xlink="http://www.w3.org/1999/xlink"
+               xml:id='step-dfdl'
+               class="ed" role="step"
+               version="5.0-extension w3c-xproc">
+<info>
+  <title>XProc 3.1: Data Format Description Language</title>
+<!-- defaults to date formatted <pubdate>2014-12-18</pubdate> -->
+<copyright><year>2021</year>
+<holder>the Contributors to the XProc 3.0 Standard Step Library
+specifications</holder>
+</copyright>
+
+<bibliomisc role="github-repo">xproc/3.0-steps</bibliomisc>
+<bibliomisc role="w3c-cg"
+            xlink:href="https://www.w3.org/community/xproc-next/">XProc Next</bibliomisc>
+
+<bibliorelation type="isformatof" xlink:href="specification.xml">XML</bibliorelation>
+<authorgroup>
+  <author>
+    <personname>John Dziurłaj</personname>
+  </author>
+</authorgroup>
+
+<abstract>
+  <para>This specification describes the <code>p:dfdl-parse</code> and <code>p:dfdl-unparse</code>
+step for <citetitle>XProc 3.0: An XML Pipeline Language</citetitle>.</para>
+</abstract>
+
+<legalnotice xml:id="sotd" role="status">
+  <para>This specification was published by the
+  <link xlink:href="https://www.w3.org/community/xproc-next/">XProc
+  Next Community Group</link>. It is not a W3C Standard nor is it on
+  the W3C Standards Track. Please note that under the
+  <link xlink:href="https://www.w3.org/community/about/agreements/cla/">W3C
+  Community Contributor License Agreement (CLA)</link> there is a limited
+  opt-out and other conditions apply. Learn more about <link
+  xlink:href="https://www.w3.org/community/">W3C Community and Business
+  Groups</link>.
+  </para>
+  
+  <para>If you wish to make comments regarding this document, please
+  send them to
+  <link xlink:href="mailto:xproc-dev@w3.org">xproc-dev@w3.org</link>.
+  (<link xlink:href="mailto:xproc-dev-request@w3.org?subject=subscribe">subscribe</link>,
+  <link xlink:href="https://lists.w3.org/Archives/Public/xproc-dev/">archives</link>).
+  </para>
+</legalnotice>
+</info>
+
+<section xml:id="introduction">
+<title>Introduction</title>
+
+<para>This specification describes the <code>p:dfdl-parse</code> and <code>p:dfdl-unparse</code> XProc steps.
+A machine-readable description of this step may be found in
+<link xlink:href="steps.xpl">steps.xpl</link>.
+</para>
+  
+<para>Familiarity with the general nature of <biblioref linkend="xproc30"/>
+steps is assumed; for background details, see
+<biblioref linkend="xproc30-steps"/>.</para>
+</section>
+
+  <section xml:id="c.dfdl">
+    <title>p:dfdl-parse</title>
+
+    <para>The <tag>p:dfdl-parse</tag> step performs Data Format Description Language parse per
+        <biblioref linkend="dfdl"/>. It transforms a non-XML input into an infoset (e.g. XML) by
+      applying the specified DFDL schema.</para>
+
+    <p:declare-step type="p:dfdl-parse">
+      <p:input port="schema" sequence="true" content-types="any"/>
+      <p:input port="source" primary="true" content-types="any"/>
+      <p:output port="result" sequence="true" content-types="any"/>
+      <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
+      <p:option name="infoset" as="xs:string" select="'xml'"/>
+      <p:option name="parameters" as="map(xs:QName, item()*)?"/>
+      <p:option name="root" as="xs:QName"/>
+      <p:option name="stream" as="xs:boolean" select="false()"/>
+    </p:declare-step>
+    <!-- 
+<para>The <port>source</port> contains the data stream to be processed.</para>
+<para>The <port>schema</port> contains the DFDL schema.</para>
+   -->
+
+    <para>XProc processors <rfc2119>must</rfc2119> support a <port>schema</port> provided as XML. It
+      is <glossterm>implementation-defined</glossterm> if other serializations are supported.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>If <option>fail-on-error</option> is <code>true</code>, the step will raise an error
+          if the input cannot be parsed by the schema. <error code="C0213">It is a
+              <glossterm>dynamic error</glossterm> if the source document cannot be parsed by the
+            provided schema.</error> If <option>fail-on-error</option> is <code>false</code>, no
+          error will be raised and processors <rfc2119>may</rfc2119> return implementation-defined
+          diagnostics on <port>result</port>.</para>
+      </listitem>      
+      <listitem>
+        <para>The <option>infoset</option> specifies the desired content type of the infoset.
+          Processors <rfc2119>must</rfc2119> support the value <code>xml</code>. <impl>It is
+          <glossterm>implementation-defined</glossterm> which additional
+          <option>infoset</option> representations (for example, JSON) are supported.</impl></para>
+      </listitem>
+      <listitem>
+        <para>The <option>parameters</option> stores external DFDL variables whose names are specified by a <code>xs:QName</code>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>The <option>root</option> specifies the target top-level element in the schema to
+          start processing. By default, the first top-level element of the <port>schema</port> will
+          be used. <error code="C0214">It is a <glossterm>dynamic error</glossterm> if
+          <option>root</option> does not identify a top-level element declaration in the provided
+          schema.</error></para>
+      </listitem>
+      <listitem>        
+        <para>If <option>stream</option> is <code>true</code>, when the DFDL processor encounters remaining
+          data after parse, the parse operation repeats with the remaining data. Processing repeats
+          until end-of-data, a parse failure, or a parse consumes no additional data. Each successful
+          parse repetition produces a new document on <port>result</port>. If
+          <option>stream</option> is <code>false</code>, <error code="C0215">it is a
+          <glossterm>dynamic error</glossterm> for data to remain after parse.</error>
+          <impl>It is <glossterm>implementation-defined</glossterm> if a DFDL processor supports
+          streaming.</impl></para>
+      </listitem>
+    </itemizedlist>
+
+    <section>
+      <title>Document properties</title>
+      <para feature="exec-preserves-none">No document properties are preserved.</para>
+    </section>
+  </section>
+
+  <section xml:id="c.dfdl-unparse">
+    <title>p:dfdl-unparse</title>
+
+    <para>The <tag>p:dfdl-unparse</tag> step performs Data Format Description Language unparse per
+      <biblioref linkend="dfdl"/>. It transforms an infoset (for example, XML or JSON) into a non-XML
+      data stream by applying the specified DFDL schema.</para>
+
+    <p:declare-step type="p:dfdl-unparse">
+      <p:input port="schema" sequence="true" content-types="any"/>
+      <p:input port="source" primary="true" sequence="true" content-types="any"/>
+      <p:output port="result" sequence="true" content-types="any"/>
+      <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
+      <p:option name="infoset" as="xs:string" select="'xml'"/>
+      <p:option name="parameters" as="map(xs:QName, item()*)?"/>
+      <p:option name="root" as="xs:QName"/>
+      <p:option name="stream" as="xs:boolean" select="false()"/>
+    </p:declare-step>
+
+    <para>XProc processors <rfc2119>must</rfc2119> support a <port>schema</port> provided as XML. It
+      is <glossterm>implementation-defined</glossterm> if other serializations are supported.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>If <option>fail-on-error</option> is <code>true</code>, the step will raise an error
+          if the infoset cannot be unparsed by the schema. <error code="C0216">It is a
+          <glossterm>dynamic error</glossterm> if the source infoset cannot be unparsed by the
+          provided schema.</error> If <option>fail-on-error</option> is <code>false</code>, no
+          error will be raised and processors <rfc2119>may</rfc2119> return implementation-defined
+          diagnostics on <port>result</port> or as out-of-band reports.</para>
+      </listitem>
+      <listitem>
+        <para>The <option>infoset</option> specifies the content type of the infoset on
+          <port>source</port>. Processors <rfc2119>must</rfc2119> support the value <code>xml</code>.
+          <impl>It is <glossterm>implementation-defined</glossterm> which additional
+          <option>infoset</option> representations (for example, JSON) are supported.</impl></para>
+      </listitem>
+      <listitem>
+        <para>The <option>parameters</option> stores external DFDL variables whose names are specified by a <code>xs:QName</code>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>The <option>root</option> specifies the target top-level element in the schema to
+          start processing. By default, the first top-level element of the <port>schema</port> will
+          be used. <error code="C0217">It is a <glossterm>dynamic error</glossterm> if
+          <option>root</option> does not identify a top-level element declaration in the provided
+          schema.</error></para>
+      </listitem>
+      <listitem>
+        <para>If <option>stream</option> is <code>true</code>, each document on <port>source</port>
+          is unparsed independently and produces a corresponding document on <port>result</port>.
+          If <option>stream</option> is <code>false</code>, <error code="C0218">it is a
+          <glossterm>dynamic error</glossterm> for more than one document to appear on
+          <port>source</port>.</error> <impl>It is <glossterm>implementation-defined</glossterm> if
+          a DFDL processor supports streaming unparse.</impl></para>
+      </listitem>
+    </itemizedlist>
+
+    <section>
+      <title>Document properties</title>
+      <para feature="exec-preserves-none">No document properties are preserved.</para>
+    </section>
+  </section>
+
+<section xml:id="errors">
+<title>Step Errors</title>
+
+<para>This step can raise
+<glossterm baseform="dynamic-error">dynamic errors</glossterm>.
+</para>
+
+<para><termdef xml:id="dt-dynamic-error">A <firstterm>dynamic
+error</firstterm> is one which occurs while a pipeline is being
+evaluated.</termdef> Examples of dynamic errors include references to
+URIs that cannot be resolved, steps which fail, and pipelines that
+exhaust the capacity of an implementation (such as memory or disk
+space). For a more complete discussion of dynamic errors, see
+<xspecref spec="xproc" xref="dynamic-errors"/>.
+</para>
+
+<para>If a step fails due to a dynamic error, failure propagates
+upwards until either a <tag>p:try</tag> is encountered or the entire
+pipeline fails. In other words, outside of a <tag>p:try</tag>, step
+failure causes the entire pipeline to fail.</para>
+
+<para>The following errors can be raised by this step:</para>
+
+<?step-error-list level="none"?>
+
+</section>
+
+<xi:include href="conformance.xml"/>
+
+<appendix xml:id="references">
+<title>References</title>
+<bibliolist>
+<bibliomixed xml:id="xproc30"/>
+<bibliomixed xml:id="xproc30-steps"/>
+<bibliomixed xml:id="dfdl"/>
+</bibliolist>
+</appendix>
+
+<!-- This glossary will automatically be elided if there are no
+     terms marked up as 'firstterm's in this specification. -->
+<xi:include href="../../../build/glossary.xml">
+  <xi:fallback>
+    <glossary xml:id="glossary">
+      <title>Glossary</title>
+      <para>Glossary needs to be generated</para>
+    </glossary>
+  </xi:fallback>
+</xi:include>
+
+<xi:include href="ancillary.xml"/>
+
+</specification>

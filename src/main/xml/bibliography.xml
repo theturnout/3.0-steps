@@ -387,6 +387,11 @@ P. Koopman. June 2002.
 John MacFarlane. 6 April 2019.
 </bibliomixed>
 
+  <bibliomixed xml:id="dfdl"><abbrev>Data Format Description Language</abbrev>
+    <citetitle xlink:href="https://ogf.org/documents/GFD.240.pdf">Data Format Description Language (DFDL) 1.0 Specification</citetitle>.
+    M. Beckerle and S. Hanson, editors. Open Grid Forum. February, 2021.
+  </bibliomixed>
+
 <bibliomixed xml:id="invisible-xml"><abbrev>Invisible XML</abbrev>
 <citetitle xlink:href="https://invisiblexml.org/1.0/">Invisible XML
 Specification</citetitle>, version 1.0.

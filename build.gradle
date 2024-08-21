@@ -707,6 +707,58 @@ task step_ixml_xpl(dependsOn: ["step-ixml:library"], type: Copy) {
 }
 
 // ======================================================================
+// step-dfdl
+
+task step_dfdl(type: DocBookTask,
+               dependsOn: [ "download_xproc_toc",
+                            "steps", "xproc_schemas", "spec_schemas",
+                            "step-dfdl:specification",
+                            "step_dfdl_assets",
+                            "step_dfdl_src", "step_dfdl_xpl" ]) {
+  inputs.files fileTree(dir: "tools/xsl/")
+  inputs.files fileTree(dir: "tools/xpl/")
+  inputs.file "build/xproc/toc.xml"
+  input("source", "step-dfdl/build/source.xml")
+  output("result", "build/dist/dfdl/index.html")
+
+  param("schemaext.schema", file("build/schema/dbspec.rng"))
+  param("ci", getenv("CIWORKFLOW"))
+  param("ci-commit", getenv("CI_SHA1"))
+  param("ci-build-number", getenv("CI_BUILD_NUM"))
+  param("ci-user", getenv("CI_PROJECT_USERNAME"))
+  param("ci-repo", getenv("CI_PROJECT_REPONAME"))
+  param("ci-branch", getenv("CI_BRANCH"))
+  param("ci-tag", getenv("CI_TAG"))
+
+  option("style", file("tools/xsl/xproc-specs.xsl"))
+  option("diff", deltaxml())
+  option("specid", "ixml")
+  option("diffloc", buildAbsDir + "/dfdl/diff.html")
+
+  pipeline "tools/xpl/formatspec.xpl"
+}
+buildspecs.dependsOn "step_dfdl"
+
+task step_dfdl_assets(type: Copy) {
+  from "src/main/resources"
+  into "build/dist/dfdl/"
+}
+
+task step_dfdl_src(dependsOn: ["step-dfdl:source"], type: Copy) {
+  from "step-ixml/build/"
+  into "build/dist/dfdl/"
+  include "source.xml"
+  rename ("source.xml", "specification.xml")
+}
+
+task step_dfdl_xpl(dependsOn: ["step-dfdl:library"], type: Copy) {
+  from "step-dfdl/build/"
+  into "build/dist/dfdl/"
+  include "library.xml"
+  rename ("library.xml", "steps.xpl")
+}
+
+// ======================================================================
 // Clean up
 
 clean {
