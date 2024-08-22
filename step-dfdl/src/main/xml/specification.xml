@@ -67,68 +67,66 @@ steps is assumed; for background details, see
 <biblioref linkend="xproc30-steps"/>.</para>
 </section>
 
-<section xml:id="c.ixml">
-<title>p:dfdl-parse</title>
+  <section xml:id="c.ixml">
+    <title>p:dfdl-parse</title>
 
-<para>The <tag>p:dfdl-parse</tag> step performs Data Format Description Language parse per
+    <para>The <tag>p:dfdl-parse</tag> step performs Data Format Description Language parse per
         <biblioref linkend="dfdl"/>. It transforms a non-XML input into an infoset (e.g. XML) by
       applying the specified DFDL schema.</para>
 
-<p:declare-step type="p:dfdl-parse">
-  <p:input port="schema" sequence="true" content-types="any"/>
-  <p:input port="source" primary="true" content-types="any"/>  
-  <!--  JND how to specify the format that is desired, i.e. infoset? -->
-  <p:output port="result" sequence="true" content-types="any"/>  
-  <p:output port="report" sequence="true" content-types="xml json"/>
-  <p:option name="report-format" select="'xvrl'" as="xs:string"/>
-  <!-- figure out how XSLT variables get passed and add that -->
-  <p:option name="parameters" as="map(xs:QName, item()*)?"/>    
-  <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
-  <!-- JND from Daffodil implementation -->
-  <p:option name="stream" as="xs:boolean" select="false()"/>
-  <p:option name="validate"  as="xs:boolean" select="false()" />
-  <p:option name="root" as="xs:QName" />
-</p:declare-step>
+    <p:declare-step type="p:dfdl-parse">
+      <p:input port="schema" sequence="true" content-types="any"/>
+      <p:input port="source" primary="true" content-types="any"/>
+      <p:output port="result" sequence="true" content-types="any"/>
+      <p:option name="fail-on-error" as="xs:boolean" select="true()"/>
+      <p:option name="infoset" as="xs:string"/>
+      <p:option name="parameters" as="map(xs:QName, item()*)?"/>
+      <p:option name="root" as="xs:QName"/>
+      <p:option name="stream" as="xs:boolean" select="false()"/>
+    </p:declare-step>
+    <!-- 
+<para>The <port>source</port> contains the data stream to be processed.</para>
+<para>The <port>schema</port> contains the DFDL schema.</para>
+   -->
 
- <para><error code="C0152">It is a <glossterm>dynamic error</glossterm> 
-    if the document supplied on <port>schema</port> port is not a valid XML schema 
-    document.</error></para>
+    <para>XProc processors <rfc2119>must</rfc2119> support a <port>schema</port> provided as xml. It
+      is <glossterm>implementation-defined</glossterm> if other serializations are supported.</para>
 
-<para>The <port>source</port> contains the data stream to be parsed.</para>
 
-  <para><impl>It is <glossterm>implementation-defined</glossterm> which <port>result</port>
-formats are possible.</impl> DFDL </para>
+    <itemizedlist>
+      <listitem>
+        <para>If <option>fail-on-error</option> is <code>true</code>, the step will raise an error
+          if the input cannot be parsed by the schema. <error code="???">It is a
+              <glossterm>dynamic error</glossterm> if the source document cannot be parsed by the
+            provided schema.</error> If <option>fail-on-error</option> is <code>false</code>, no
+          error will be raised. </para>
+      </listitem>      
+      <listitem>
+        <para>The <option>infoset</option> specifies the desired content type of the infoset. It is
+            <glossterm>implementation-defined</glossterm> which representations are
+          supported.</para>
+      </listitem>
+      <listitem>
+        <para><impl>The <option>parameters</option> stores DFDL parameters whose names are specified by a <code>xs:QName</code>.</impl>
+        </para>
+      </listitem>
+      <listitem>
+        <para>The <option>root</option> specifies the target top-level element in the schema to
+          start processing. By default, the first top-level element of the <port>schema</port> will
+          be used.</para>
+      </listitem>
+      <listitem>        
+        <para>If <option>stream</option> is <code>true</code>, if the DFDL processor encounters remaining data after parse, the parse operation will repeat with the remaining data. 
+          Each parse reptition will result in a new document on <port>result</port>.
+          Otherwise, it is a <glossterm>dynamic error</glossterm> for data to remain after parse. It is <glossterm>implementation-defined</glossterm> if a DFDL processor supports streaming.</para>
+      </listitem>
+    </itemizedlist>
 
-<itemizedlist>
-<listitem>
-<para><impl>The <option>parameters</option> are 
-<glossterm>implementation-defined</glossterm>.</impl> </para>
-</listitem>  
-<listitem>
-  <!--  DFDL schemas are XSDs. However, some processors such as Apache Dafodil allow the schemas to be "compiled", which may provide performance benefits -->
-  <para>XProc processors <rfc2119>must</rfc2119> support a <option>schema</option> provided as xml. It is <glossterm>implementation-defined</glossterm> if other serializations are supported.</para>
-</listitem>
-  <listitem>
-<para>If <option>fail-on-error</option> is <code>true</code>, the step will
-raise an error if the input cannot be parsed by the grammar.
-<error code="C0205">It is a <glossterm>dynamic error</glossterm>
-if the source document cannot be parsed by the provided grammar.</error>
-If <option>fail-on-error</option> is <code>false</code>, no error will be raised.
-</para>
-<para>The Invisible XML specification provides a mechanism to identify failed parses
-in the output.</para>
-</listitem>
-<listitem>
-  <!-- JND just taking from Daffodil CLI right now -->
-  <para>The root element to use. This must be one of the top-level elements of the DFDL schema defined with --schema. This requires the --schema option to be defined. Defaults to the schema's first top-level element if not provided. A namespace may be specified by prefixing ROOT with {NAMESPACE}.</para>
-</listitem>
-</itemizedlist>
-
-<section>
-<title>Document properties</title>
-<para feature="exec-preserves-none">No document properties are preserved.</para>
-</section>
-</section>
+    <section>
+      <title>Document properties</title>
+      <para feature="exec-preserves-none">No document properties are preserved.</para>
+    </section>
+  </section>
 
 <section xml:id="errors">
 <title>Step Errors</title>
